@@ -1,25 +1,22 @@
 import { loadStdlib, ask } from "@reach-sh/stdlib";
 import * as backend from "./build/index.main.mjs";
 const stdlib = loadStdlib(process.env);
-
+stdlib.setProviderByName("TestNet");
 const isAlice = await ask.ask(`Are you Alice?`, ask.yesno);
 const who = isAlice ? "Alice" : "Bob";
 
 console.log(`Starting Rock, Paper, Scissors! as ${who}`);
 let acc = null;
-const createAcc = await ask.ask(
-  `Would you like to create an account? (only possible on devnet)`,
-  ask.yesno
-);
-if (createAcc) {
-  acc = await stdlib.newTestAccount(stdlib.parseCurrency(1000));
-} else {
-  const secret = await ask.ask(`What is your account secret?`, (x) => x);
-  acc = await stdlib.newAccountFromSecret(secret);
-}
+
+const mnemonic = await ask.ask(`What is your account secret?`, (x) => x);
+acc = await stdlib.newAccountFromMnemonic(mnemonic);
 
 let ctc = null;
-if (isAlice) {
+const deployCtc = await ask.ask(
+  "Do you want to deploy the contract (y/n)?",
+  ask.yesno
+);
+if (deployCtc) {
   ctc = acc.contract(backend);
   ctc.getInfo().then((info) => {
     console.log(`The contract is deployed as = ${JSON.stringify(info)}`);
